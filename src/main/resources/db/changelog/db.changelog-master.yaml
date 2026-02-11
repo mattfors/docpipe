@@ -1,9 +1,5 @@
 databaseChangeLog:
-  - changeSet:
-      id: placeholder-1
-      author: system
-      comment: Placeholder changelog - schema migrations coming soon
-      changes:
-        - sql:
-            sql: SELECT 1
-            comment: No-op placeholder to allow application startup
+  - include:
+      file: db/changelog/001-create-def-tables.yaml
+  - include:
+      file: db/changelog/002-seed-demo-tenant.yaml

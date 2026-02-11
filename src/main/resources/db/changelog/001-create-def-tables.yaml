@@ -1,0 +1,248 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-def-tenant
+      author: system
+      changes:
+        - createTable:
+            tableName: def_tenant
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 001-create-def-adapter
+      author: system
+      changes:
+        - createTable:
+            tableName: def_adapter
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_adapter_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: def_adapter
+            columnNames: tenant_id, def_adapter_id
+            constraintName: pk_def_adapter
+        - addForeignKeyConstraint:
+            baseTableName: def_adapter
+            baseColumnNames: tenant_id
+            referencedTableName: def_tenant
+            referencedColumnNames: tenant_id
+            constraintName: fk_def_adapter_tenant
+
+  - changeSet:
+      id: 001-create-def-doc
+      author: system
+      changes:
+        - createTable:
+            tableName: def_doc
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: def_doc
+            columnNames: tenant_id, def_doc_id
+            constraintName: pk_def_doc
+        - addForeignKeyConstraint:
+            baseTableName: def_doc
+            baseColumnNames: tenant_id
+            referencedTableName: def_tenant
+            referencedColumnNames: tenant_id
+            constraintName: fk_def_doc_tenant
+
+  - changeSet:
+      id: 001-create-def-adapter-route
+      author: system
+      changes:
+        - createTable:
+            tableName: def_adapter_route
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_adapter_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_adapter_route_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: path
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: def_adapter_route
+            columnNames: tenant_id, def_adapter_id, def_adapter_route_id
+            constraintName: pk_def_adapter_route
+        - addForeignKeyConstraint:
+            baseTableName: def_adapter_route
+            baseColumnNames: tenant_id, def_adapter_id
+            referencedTableName: def_adapter
+            referencedColumnNames: tenant_id, def_adapter_id
+            constraintName: fk_def_adapter_route_adapter
+        - addForeignKeyConstraint:
+            baseTableName: def_adapter_route
+            baseColumnNames: tenant_id, def_doc_id
+            referencedTableName: def_doc
+            referencedColumnNames: tenant_id, def_doc_id
+            constraintName: fk_def_adapter_route_doc
+
+  - changeSet:
+      id: 001-create-def-doc-segment
+      author: system
+      changes:
+        - createTable:
+            tableName: def_doc_segment
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_segment_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_def_doc_segment_id
+                  type: varchar(50)
+              - column:
+                  name: name
+                  type: varchar(200)
+        - addPrimaryKey:
+            tableName: def_doc_segment
+            columnNames: tenant_id, def_doc_id, def_doc_segment_id
+            constraintName: pk_def_doc_segment
+        - addForeignKeyConstraint:
+            baseTableName: def_doc_segment
+            baseColumnNames: tenant_id, def_doc_id
+            referencedTableName: def_doc
+            referencedColumnNames: tenant_id, def_doc_id
+            constraintName: fk_def_doc_segment_doc
+        - addForeignKeyConstraint:
+            baseTableName: def_doc_segment
+            baseColumnNames: tenant_id, def_doc_id, parent_def_doc_segment_id
+            referencedTableName: def_doc_segment
+            referencedColumnNames: tenant_id, def_doc_id, def_doc_segment_id
+            constraintName: fk_def_doc_segment_parent
+
+  - changeSet:
+      id: 001-create-def-doc-field
+      author: system
+      changes:
+        - createTable:
+            tableName: def_doc_field
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_segment_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_field_id
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: field_order
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: length
+                  type: int
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: def_doc_field
+            columnNames: tenant_id, def_doc_id, def_doc_segment_id, def_doc_field_id
+            constraintName: pk_def_doc_field
+        - addForeignKeyConstraint:
+            baseTableName: def_doc_field
+            baseColumnNames: tenant_id, def_doc_id, def_doc_segment_id
+            referencedTableName: def_doc_segment
+            referencedColumnNames: tenant_id, def_doc_id, def_doc_segment_id
+            constraintName: fk_def_doc_field_segment
+        - addUniqueConstraint:
+            tableName: def_doc_field
+            columnNames: tenant_id, def_doc_id, def_doc_segment_id, field_order
+            constraintName: uk_def_doc_field_order

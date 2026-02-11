@@ -20,7 +20,15 @@ The interface is divided into three main sections:
 
 ### Tree Navigation
 
-A hierarchical expandable tree structure for navigating and managing configuration:
+A hierarchical expandable tree structure for navigating and managing configuration.
+
+**Expand/Collapse Behavior:**
+- Use **+** (plus) symbol for collapsed nodes
+- Use **−** (minus) symbol for expanded nodes
+- Clicking the symbol or node label toggles expansion
+- Tree nodes are collapsible using HTML `<details>` elements
+
+**Tree Structure:**
 
 ```
 └── Tenant: acme-inc
