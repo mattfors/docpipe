@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: placeholder-1
+      author: system
+      comment: Placeholder changelog - schema migrations coming soon
+      changes:
+        - sql:
+            sql: SELECT 1
+            comment: No-op placeholder to allow application startup
