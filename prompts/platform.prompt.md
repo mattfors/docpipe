@@ -45,6 +45,11 @@
 - Place changesets in `src/main/resources/db/changelog/`
 - Include seed data migrations for demo tenant and Part Material example (see examples.prompt.md)
 
+**Implemented Migrations**:
+- `001-create-def-tables.yaml` - Creates all `def_*` configuration tables
+- `002-seed-demo-tenant.yaml` - Seeds demo-tenant with Part Material document configuration
+- `003-create-data-tables.yaml` - Creates `data_doc_hdr` and `data_doc_segment` runtime tables
+
 ---
 
 ## Docker + Dev Container Expectations
@@ -65,3 +70,62 @@
 - No domain mapping or validation engines unless explicitly requested
 - No complex orchestration frameworks
 - No SPA frameworks (React, Angular, Vue)
+
+---
+
+## Implemented Components
+
+### Services (com.fors.service)
+
+**ConfigurationTreeService**
+- Loads complete configuration hierarchy from database
+- Builds tenant → adapters/routes and documents → segments → fields tree
+- Provides nested node classes (TenantNode, AdapterNode, RouteNode, DocumentNode, SegmentNode, FieldNode)
+- Used by configuration management UI
+
+**DocumentDataService**
+- Loads processed document instances with unpacked segment data
+- Unpacks fixed-width segment_data byte arrays into individual field values
+- Provides nested node classes (DocumentInstanceNode, SegmentInstanceNode, FieldValueNode)
+- Implements unpacking logic: offset calculation, byte extraction, UTF-8 conversion
+- Used by document data viewing UI
+
+### Controllers (com.fors.web)
+
+**AdminController**
+- `/admin` - Configuration management page
+- `/admin/data` - Document data viewing page with tenant filter
+- Injects ConfigurationTreeService and DocumentDataService
+- Passes data to Thymeleaf templates
+
+**HealthController**
+- `/api/keepalive` - Returns JSON status for availability checking
+
+### Repositories (com.fors.persistence)
+
+**Definition Tables**:
+- DefTenantRepository
+- DefAdapterRepository
+- DefAdapterRouteRepository
+- DefDocRepository
+- DefDocSegmentRepository
+- DefDocFieldRepository
+
+**Runtime Data Tables**:
+- DataDocHdrRepository - Document instances with tenant filtering
+- DataDocSegmentRepository - Segment instances with ordering by seq_no
+
+All repositories use composite key types with @IdClass pattern.
+
+### Entities (com.fors.persistence.entity)
+
+**Definition Entities**:
+- DefTenant, DefAdapter, DefAdapterRoute
+- DefDoc, DefDocSegment, DefDocField
+- All use composite keys via nested IdClass implementations
+
+**Runtime Data Entities**:
+- DataDocHdr - Document header with timestamp
+- DataDocSegment - Segment with byte[] segment_data
+
+All entities use explicit @Table and @Column annotations matching database schema.

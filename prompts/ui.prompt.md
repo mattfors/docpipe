@@ -16,6 +16,29 @@ The interface is divided into three main sections:
 
 ---
 
+## Visual Identity
+
+**Logo**: 📄🚰 (document + pipe)
+
+**Color Scheme**:
+- Header: Dark blue-grey (#2c3e50) with accent border (#3498db)
+- Background: Light grey (#f5f5f5)
+- Cards: White with subtle shadow
+- Links/Actions: Blue (#3498db)
+
+---
+
+## Navigation
+
+A horizontal navigation bar below the header provides access to main sections:
+
+- **Configuration** - `/admin` - View and manage document definitions
+- **Document Data** - `/admin/data` - View processed document instances
+
+Active section is highlighted with blue background.
+
+---
+
 ## Configuration Management UI
 
 ### Tree Navigation
@@ -158,85 +181,136 @@ Each node type supports context-appropriate actions:
 
 ## Data Viewing UI
 
-### Document List View
+### Implementation Approach
 
-**Search/Filter Panel**
-- Tenant selector (if multi-tenant access)
-- Document type selector (dropdown of def_doc records)
-- Date range filter (received_at)
-- Document ID search (data_doc_hdr_id)
+Document data viewing uses a hierarchical tree display similar to the configuration UI, showing:
+- Document instances at the top level
+- Segments as child nodes
+- Fields with unpacked values as leaf nodes
 
-**Results Table**
-Column layout:
-- data_doc_hdr_id
-- def_doc_id (document type)
-- received_at
-- Segment count
-- Actions (View, Export)
+### Document Instance Tree
 
-### Document Detail View
+**Structure**:
+```
+└── PartMaterial [pm-doc-001] (2024-01-15 10:30:45)
+    └── Segments
+        ├── (root) [seq: 1]
+        ├── PartMaterial [seq: 2]
+        │   └── Fields
+        │       └── (fields for this segment)
+        ├── Header [seq: 3]
+        │   └── Fields
+        │       ├── DocNumber : PM-2024-001
+        │       ├── Date : 2024-01-15
+        │       └── Supplier : ACME Corp
+        ├── Part [seq: 4]
+        │   └── Fields
+        │       ├── PartNumber : P-12345
+        │       └── Description : Widget Assembly
+        └── Material [seq: 5]
+            └── Fields
+                ├── Code : STEEL-304
+                ├── Weight : 2.5
+                └── UnitCost : 125.00
+```
 
-**Header Information**
-- tenant_id
-- data_doc_hdr_id
-- def_doc_id (document type name)
-- received_at
+**Expand/Collapse Behavior**:
+- Same **+** / **−** symbols as configuration UI
+- Document nodes start expanded by default
+- Segment nodes start collapsed
 
-**Segment List**
+**Field Display**:
+- Field name followed by colon and unpacked value
+- Values are extracted from packed `segment_data` using field definitions
+- Whitespace is trimmed from fixed-width values
 
-Tabular view of all segments for the document:
-Column layout:
-- seq_no (ascending order)
-- def_doc_segment_id
-- Segment name (from definition)
-- Actions (View Unpacked)
+### Empty State
 
-**Segment Detail Modal**
+When no documents have been processed:
+- Display centered message: "📭 No documents have been processed yet."
+- Include hint: "Documents will appear here after ingestion via configured routes."
 
-When viewing a specific segment:
-- Display segment metadata (seq_no, segment type)
-- Show unpacked fields in table:
-  - Field name
-  - Field value (extracted from segment_data)
-  - Field order
-  - Length
+### Document Metadata
 
-**Unpacking Logic**
+Each document instance displays:
+- Document type name (from def_doc)
+- data_doc_hdr_id (unique identifier)
+- received_at timestamp (formatted as `yyyy-MM-dd HH:mm:ss`)
 
-To display segment data:
-1. Load segment_data column
-2. Query def_doc_field for segment definition
-3. Sort fields by field_order
-4. Extract each field using offset arithmetic:
-   - offset = sum of preceding field lengths
-   - value = segment_data.substring(offset, offset + length)
-5. Display field name and trimmed value
+### Segment Metadata
 
-### Export Options
+Each segment displays:
+- Segment name (from def_doc_segment, or "(root)" if NULL)
+- Sequence number badge (e.g., "seq: 3")
 
-- **Single document**: Export as original XML or JSON representation
-- **Multiple documents**: Export as CSV (flattened) or JSON array
-- **Segment data**: Export unpacked segment as CSV/JSON
+### Data Unpacking
+
+To display field values from packed segment_data:
+1. Load `segment_data` byte array
+2. Query `def_doc_field` for segment's field definitions
+3. Sort fields by `field_order`
+4. Extract each field value:
+   - Calculate offset: sum of all preceding field lengths
+   - Read bytes from offset to offset + field.length
+   - Convert bytes to UTF-8 string
+   - Trim whitespace
+5. Display field name and value
+
+### Tenant Filtering
+
+Default tenant is `demo-tenant`. Query parameter `?tenantId=X` allows viewing other tenants.
+
+---
+
+## Implemented Routes
+
+### Admin UI Routes
+
+- **GET `/admin`** - Configuration management page
+  - Displays hierarchical tree of tenants, adapters, routes, documents, segments, fields
+  - Uses ConfigurationTreeService to load data
+  - Template: `admin/config.html`
+
+- **GET `/admin/data`** - Document data viewing page
+  - Query parameter: `?tenantId=demo-tenant` (default)
+  - Displays processed document instances with unpacked segment data
+  - Uses DocumentDataService to load and unpack data
+  - Template: `admin/data.html`
+
+### API Routes
+
+- **GET `/api/keepalive`** - Health check endpoint
+  - Returns: `{"status":"ok","application":"docpipe","timestamp":"..."}`
+
+### Future Ingestion Routes (Dynamic)
+
+Routes are materialized at startup from `def_adapter_route` configuration:
+- **POST `/ingest/partmaterial`** → processes documents of type `pm-doc`
+- Pattern: **POST `{path}`** → `{def_doc_id}`
 
 ---
 
 ## UI Navigation Flow
 
-### Configuration Workflow
+### Configuration Viewing Workflow (v1 - Read-Only)
 
-1. Select tenant (if multiple)
-2. Navigate tree to desired level
-3. Perform CRUD operation
-4. Save changes
-5. System restarts or reloads config (depending on hot-reload support)
+1. Navigate to `/admin`
+2. View tenant configuration tree
+3. Expand/collapse nodes to explore:
+   - Adapters and their routes
+   - Documents with segment hierarchies
+   - Fields with order and length details
+4. Use navigation bar to switch between Configuration and Document Data
 
-### Data Viewing Workflow
+### Data Viewing Workflow (v1)
 
-1. Select tenant (if multi-tenant)
-2. Filter/search for documents
-3. Click document to view details
-4. Expand segments to view unpacked data
-5. Export if needed
+1. Navigate to `/admin/data`
+2. View list of processed document instances (newest first)
+3. Expand document nodes to see segments
+4. Expand segment nodes to see unpacked field values
+5. Documents appear automatically after ingestion
+
+**Note**: v1 is read-only. CRUD operations for configuration and data export are future enhancements.
 
 ---
 

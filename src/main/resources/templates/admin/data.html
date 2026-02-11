@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>docpipe - Document Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            border-bottom: 3px solid #3498db;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .header .subtitle {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-top: 0.25rem;
+        }
+        .nav {
+            background: white;
+            padding: 0.75rem 2rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 1.5rem;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #3498db;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        .nav a:hover {
+            background: #ecf0f1;
+        }
+        .nav a.active {
+            background: #3498db;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .data-list {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .data-node {
+            margin: 0.75rem 0;
+        }
+        details {
+            margin: 0.25rem 0;
+        }
+        summary {
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+        }
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        summary::before {
+            content: '+ ';
+            display: inline-block;
+            width: 1.2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        details[open] > summary::before {
+            content: '\u2212 ';
+        }
+        summary:hover {
+            background: #f8f9fa;
+        }
+        .doc-label {
+            padding: 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .segment-label {
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .field-label {
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .data-children {
+            margin-left: 1.5rem;
+            border-left: 1px dashed #ccc;
+            padding-left: 1rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge-doc {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge-segment {
+            background: #d4edda;
+            color: #155724;
+        }
+        .doc-icon { font-weight: bold; color: #3498db; }
+        .segment-icon { color: #27ae60; }
+        .field-icon { color: #7f8c8d; }
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.25rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .timestamp {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .field-value {
+            margin-left: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄🚰 docpipe</h1>
+        <div class="subtitle">Document Data</div>
+    </div>
+
+    <div class="nav">
+        <a href="/admin">Configuration</a>
+        <a href="/admin/data" class="active">Document Data</a>
+    </div>
+
+    <div class="container">
+        <div class="data-list">
+            <div th:if="${documents.isEmpty()}" class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No documents have been processed yet.</p>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">Documents will appear here after ingestion via configured routes.</p>
+            </div>
+
+            <div th:each="doc : ${documents}" class="data-node">
+                <details open>
+                    <summary class="doc-label">
+                        <span class="doc-icon">📄</span>
+                        <strong th:text="${doc.documentName}">Document Name</strong>
+                        <code th:text="${doc.dataDocHdrId}">doc-hdr-id</code>
+                        <span class="timestamp" th:text="${#temporals.format(doc.receivedAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
+                    </summary>
+                    
+                    <div class="data-children">
+                        <div class="segment-label">Segments</div>
+                        <div th:each="segment : ${doc.segments}" class="data-node">
+                            <details>
+                                <summary class="segment-label">
+                                    <span class="segment-icon">▪</span>
+                                    <span th:text="${segment.segmentName != null ? segment.segmentName : '(root)'}">Segment Name</span>
+                                    <span class="badge badge-segment" th:text="'seq: ' + ${segment.seqNo}">seq: 1</span>
+                                </summary>
+                                
+                                <div class="data-children">
+                                    <div th:if="${!segment.fields.isEmpty()}">
+                                        <div class="field-label">Fields</div>
+                                        <div th:each="field : ${segment.fields}" class="data-node">
+                                            <div class="field-label">
+                                                <span class="field-icon">·</span>
+                                                <span th:text="${field.fieldName}">Field Name</span>
+                                                <span>:</span>
+                                                <span class="field-value" th:text="${field.value}">value</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

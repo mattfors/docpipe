@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-data-doc-hdr
+      author: docpipe
+      changes:
+        - createTable:
+            tableName: data_doc_hdr
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_doc_hdr_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: received_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: data_doc_hdr
+            columnNames: tenant_id, data_doc_hdr_id
+            constraintName: pk_data_doc_hdr
+        - addForeignKeyConstraint:
+            baseTableName: data_doc_hdr
+            baseColumnNames: tenant_id, def_doc_id
+            referencedTableName: def_doc
+            referencedColumnNames: tenant_id, def_doc_id
+            constraintName: fk_data_doc_hdr_def_doc
+
+  - changeSet:
+      id: 003-create-data-doc-segment
+      author: docpipe
+      changes:
+        - createTable:
+            tableName: data_doc_segment
+            columns:
+              - column:
+                  name: tenant_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_doc_hdr_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_doc_segment_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: def_doc_segment_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seq_no
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: segment_data
+                  type: bytea
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: data_doc_segment
+            columnNames: tenant_id, data_doc_hdr_id, data_doc_segment_id
+            constraintName: pk_data_doc_segment
+        - addForeignKeyConstraint:
+            baseTableName: data_doc_segment
+            baseColumnNames: tenant_id, data_doc_hdr_id
+            referencedTableName: data_doc_hdr
+            referencedColumnNames: tenant_id, data_doc_hdr_id
+            constraintName: fk_data_doc_segment_hdr
+        - addForeignKeyConstraint:
+            baseTableName: data_doc_segment
+            baseColumnNames: tenant_id, def_doc_id, def_doc_segment_id
+            referencedTableName: def_doc_segment
+            referencedColumnNames: tenant_id, def_doc_id, def_doc_segment_id
+            constraintName: fk_data_doc_segment_def_segment
